@@ -1,4 +1,5 @@
-DEBUGBUILD=1
+DEBUGBUILD?=1
+RUSTFORMAT?=short
 
 AS=as
 RUSTC=rustc
@@ -11,7 +12,7 @@ RUSTDEBUG=-C debuginfo=2 -C opt-level=0
 else
 RUSTDEBUG=
 endif
-RUSTFLAGS=--emit=obj --crate-type=staticlib --target i686-unknown-linux-gnu $(RUSTDEBUG)
+RUSTFLAGS=--emit=obj --crate-type=staticlib --target i686-unknown-linux-gnu $(RUSTDEBUG) --error-format $(RUSTFORMAT)
 
 OBJ_RUST=kernel.o
 OBJ_ASM=boot.o
