@@ -10,7 +10,7 @@ ASFLAGS=--32
 ifeq ($(DEBUGBUILD), 1)
 RUSTDEBUG=-C debuginfo=2 -C opt-level=0
 else
-RUSTDEBUG=
+RUSTDEBUG=-O
 endif
 RUSTFLAGS=--emit=obj --crate-type=staticlib --target i686-unknown-linux-gnu $(RUSTDEBUG) --error-format $(RUSTFORMAT)
 
