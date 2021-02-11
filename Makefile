@@ -12,7 +12,7 @@ RUSTDEBUG=-C debuginfo=2 -C opt-level=0
 else
 RUSTDEBUG=-O
 endif
-RUSTFLAGS=--emit=obj --crate-type=staticlib --target i686-unknown-linux-gnu $(RUSTDEBUG) --error-format $(RUSTFORMAT)
+RUSTFLAGS=--emit=obj --crate-type=staticlib --target i686-unknown-linux-gnu $(RUSTDEBUG) -C panic=abort -C lto -C target-feature=-mmx,-sse --error-format $(RUSTFORMAT)
 
 OBJ_RUST=kernel.o
 OBJ_ASM=boot.o
