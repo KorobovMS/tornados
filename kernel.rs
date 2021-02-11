@@ -8,6 +8,16 @@ extern "C" {
     fn hang() -> !;
 }
 
+#[no_mangle]
+pub unsafe extern "C" fn memcpy(dst: *mut u8, src: *const u8, size: usize) -> *mut u8 {
+    let mut i = 0usize;
+    while i < size {
+        *dst.offset(i as isize) = *src.offset(i as isize);
+        i += 1;
+    }
+    dst
+}
+
 struct Vga {
     vga: *mut u16,
     row: u8,
