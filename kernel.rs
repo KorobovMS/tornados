@@ -14,6 +14,8 @@ struct Vga {
     vga: *mut u16,
     row: u8,
     col: u8,
+    width: u8,
+    height: u8,
 }
 
 impl Vga {
@@ -22,6 +24,8 @@ impl Vga {
             vga: 0xB8000 as *mut u16,
             row: 0u8,
             col: 0u8,
+            width: 80,
+            height: 25,
         }
     }
 
@@ -31,15 +35,16 @@ impl Vga {
         let ch = ch as u16;
         let row = row as isize;
         let col = col as isize;
+        let width = self.width as isize;
         let entry = ch | (fg | (bg << 4)) << 8;
         unsafe {
-            core::ptr::write_volatile(self.vga.offset(80isize * row + col), entry);
+            core::ptr::write_volatile(self.vga.offset(width * row + col), entry);
         }
     }
 
     fn clear_screen(&self) {
-        for r in 0..25 {
-            for c in 0..80 {
+        for r in 0..self.height {
+            for c in 0..self.width {
                 self.set_char(r, c, b' ', 0, 0);
             }
         }
