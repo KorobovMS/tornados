@@ -5,7 +5,8 @@ extern "C" {
 }
 
 #[panic_handler]
-fn panic_impl(_info: &core::panic::PanicInfo) -> ! {
+#[no_mangle]
+pub extern "C" fn rust_begin_unwind(_info: &core::panic::PanicInfo) -> ! {
     let mut vga = Vga::new();
     if let Some(arg) = _info.message() {
         if let Some(msg) = arg.as_str() {
