@@ -12,11 +12,11 @@ RUSTDEBUG=-C debuginfo=2 -C opt-level=0
 else
 RUSTDEBUG=-O
 endif
-RUSTFLAGS=--emit=obj --crate-type=staticlib --target i686-unknown-linux-gnu $(RUSTDEBUG) -C panic=abort -C lto -C target-feature=-mmx,-sse --error-format $(RUSTFORMAT)
+RUSTFLAGS=--crate-type=rlib --target i686-unknown-none.json $(RUSTDEBUG) -C lto --error-format $(RUSTFORMAT) --extern core=libcore.rlib --extern compiler_builtins=libcompiler_builtins.rlib
 
-OBJ_RUST=kernel.o
+OBJ_RUST=kernel.rlib
 OBJ_ASM=boot.o
-OBJS=$(OBJ_RUST) $(OBJ_ASM)
+OBJS_RUST=$(OBJ_RUST) libcompiler_builtins.rlib libcore.rlib
 
 .PHONY: all
 all: kernel.elf
@@ -24,11 +24,11 @@ all: kernel.elf
 $(OBJ_ASM): %.o: %.s
 	$(AS) $< -o $@ $(ASFLAGS)
 
-$(OBJ_RUST): %.o: %.rs
+$(OBJ_RUST): %.rlib: %.rs
 	$(RUSTC) $< -o $@ $(RUSTFLAGS)
 
-kernel.elf: $(OBJS) linker.lds
-	$(LD) -T linker.lds $(OBJS) -o $@
+kernel.elf: $(OBJ_ASM) $(OBJS_RUST) linker.lds
+	$(LD) -T linker.lds $(OBJ_ASM) --start-group $(OBJS_RUST) --end-group -o $@ --gc-sections
 
 .PHONY: clean
 clean:

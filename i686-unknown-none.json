@@ -1,0 +1,16 @@
+{
+    "llvm-target": "i686-unknown-none-gnu",
+    "target-endian": "little",
+    "target-pointer-width": "32",
+    "os": "none",
+    "arch": "x86",
+    "data-layout": "e-m:e-p:32:32-p270:32:32-p271:32:32-p272:64:64-f64:32:64-f80:32-n8:16:32-S128",
+    "cpu": "pentium4",
+    "features": "-mmx,-sse,-sse2,-sse3,-ssse3,-sse4.1,-sse4.2,-3dnow,-3dnowa,-avx,-avx2,+soft-float",
+    "disable-redzone": true,
+    "eliminate-frame-pointer": true,
+    "linker-is-gnu": true,
+    "no-compiler-rt": true,
+    "archive-format": "gnu",
+    "panic-strategy": "abort"
+}
