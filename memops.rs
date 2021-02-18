@@ -35,3 +35,17 @@ pub unsafe extern "C" fn memset(mem: *mut u8, c: i32, size: usize) -> *mut u8 {
     }
     mem
 }
+
+#[no_mangle]
+pub unsafe extern "C" fn memcmp(s1: *const u8, s2: *const u8, n: usize) -> i32 {
+    let mut i = 0;
+    while i < n {
+        let a = *s1.offset(i as isize);
+        let b = *s2.offset(i as isize);
+        if a != b {
+            return a as i32 - b as i32;
+        }
+        i += 1;
+    }
+    0
+}
