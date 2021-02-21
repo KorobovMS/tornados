@@ -39,30 +39,4 @@ _start:
         and esp, 0xFFFFFFF0
         lidt _idt_ptr
         call kernel_main
-        call hang
 .size _start, . - _start
-
-.global enable_interrupts
-enable_interrupts:
-        sti
-        ret
-.size enable_interrupts, . - enable_interrupts
-
-.global disable_interrupts
-disable_interrupts:
-        cli
-        ret
-.size disable_interrupts, . - disable_interrupts
-
-.global get_kernel_cs
-get_kernel_cs:
-    mov eax, cs
-    ret
-.size get_kernel_cs, . - get_kernel_cs
-
-.global hang
-hang:
-        cli
-1:      hlt
-        jmp 1b
-.size hang, . - hang

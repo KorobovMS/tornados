@@ -1,8 +1,5 @@
+use idt::hang;
 use vga::Vga;
-
-extern "C" {
-    fn hang() -> !;
-}
 
 #[panic_handler]
 #[no_mangle]
@@ -17,9 +14,7 @@ pub extern "C" fn rust_begin_unwind(_info: &core::panic::PanicInfo) -> ! {
     } else {
         vga.write("unknown arg");
     }
-    unsafe {
-        hang();
-    }
+    hang();
 }
 
 #[lang = "eh_personality"]
