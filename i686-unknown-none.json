@@ -12,5 +12,6 @@
     "linker-is-gnu": true,
     "no-compiler-rt": true,
     "archive-format": "gnu",
-    "panic-strategy": "abort"
+    "panic-strategy": "abort",
+    "relocation-model": "static"
 }
