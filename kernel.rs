@@ -9,12 +9,15 @@ mod idt;
 mod memops;
 mod panic;
 mod vga;
+mod ioport;
+mod pic;
 
 use vga::Vga;
 
 #[no_mangle]
 pub fn kernel_main() {
     idt::setup_idt();
+    pic::disable_pic();
     idt::enable_interrupts();
     let vga = Vga::new();
     vga.clear_screen();
