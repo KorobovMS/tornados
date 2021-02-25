@@ -10,6 +10,7 @@ mod memops;
 mod panic;
 mod vga;
 mod ioport;
+mod serial;
 mod pic;
 
 use vga::Vga;
@@ -18,6 +19,8 @@ use vga::Vga;
 pub fn kernel_main() {
     idt::setup_idt();
     pic::remap(0x20, 0x28);
+    serial::serial_init();
+    serial::write_str("Booting kernel...\n");
     idt::enable_interrupts();
     let vga = Vga::new();
     vga.clear_screen();
