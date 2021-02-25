@@ -17,7 +17,7 @@ use vga::Vga;
 #[no_mangle]
 pub fn kernel_main() {
     idt::setup_idt();
-    pic::disable_pic();
+    pic::remap(0x20, 0x28);
     idt::enable_interrupts();
     let vga = Vga::new();
     vga.clear_screen();
