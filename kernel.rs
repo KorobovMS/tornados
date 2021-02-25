@@ -19,9 +19,9 @@ use vga::Vga;
 pub fn kernel_main() {
     idt::setup_idt();
     pic::remap(0x20, 0x28);
+    idt::enable_interrupts();
     serial::serial_init();
     serial::write_str("Booting kernel...\n");
-    idt::enable_interrupts();
     let vga = Vga::new();
     vga.clear_screen();
     idt::hang();
