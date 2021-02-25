@@ -1,9 +1,9 @@
 pub struct Port {
-    pub port: u16,
+    port: u16,
 }
 
 impl Port {
-    pub fn new(port: u16) -> Port {
+    pub const fn new(port: u16) -> Port {
         Port {
             port
         }
