@@ -112,12 +112,12 @@ pub fn setup_idt() {
         setup_idt_descriptor(idt, 12, stack_fault as *const ());
         setup_idt_descriptor(idt, 13, general_protection as *const ());
         setup_idt_descriptor(idt, 14, page_fault as *const ());
-        setup_idt_descriptor(idt, 15, x87_fpu_floating_point_error as *const ());
-        setup_idt_descriptor(idt, 16, alignment_check as *const ());
-        setup_idt_descriptor(idt, 17, machine_check as *const ());
-        setup_idt_descriptor(idt, 18, simd_floating_point as *const ());
-        setup_idt_descriptor(idt, 19, virtualization as *const ());
-        setup_idt_descriptor(idt, 20, setup_idt_descriptor as *const ());
+        // No interrupt 15
+        setup_idt_descriptor(idt, 16, x87_fpu_floating_point_error as *const ());
+        setup_idt_descriptor(idt, 17, alignment_check as *const ());
+        setup_idt_descriptor(idt, 18, machine_check as *const ());
+        setup_idt_descriptor(idt, 19, simd_floating_point as *const ());
+        setup_idt_descriptor(idt, 20, virtualization as *const ());
     }
 }
 
