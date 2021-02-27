@@ -5,13 +5,9 @@ This project is an attempt to write a microkernel with a small environment using
 # Prerequisites
 
 * Nightly Rust build
-
-** `rustup toolchain install x86\_64-unknown-linux-gnu`
-
+    * `rustup toolchain install x86\_64-unknown-linux-gnu`
 * make
-
 * binutils
-
 * qemu
 
 # Build
