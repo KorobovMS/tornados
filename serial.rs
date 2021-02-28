@@ -16,7 +16,7 @@ static SERIAL_SR: Port = Port::new(SERIAL_BASE + 7);
 pub fn serial_init() {
     SERIAL_IER.out8(0x00);
     SERIAL_LCR.out8(0x80);
-    SERIAL_DLAB_DIV_LSB.out8(0x03);
+    SERIAL_DLAB_DIV_LSB.out8(0x01);
     SERIAL_DLAB_DIV_MSB.out8(0x00);
     SERIAL_LCR.out8(0x03);
     SERIAL_II.out8(0xC7);
