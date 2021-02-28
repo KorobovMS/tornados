@@ -1,4 +1,4 @@
-use idt::hang;
+use idt::{hang, disable_interrupts};
 use vga::Vga;
 
 #[panic_handler]
@@ -14,6 +14,7 @@ pub extern "C" fn rust_begin_unwind(_info: &core::panic::PanicInfo) -> ! {
     } else {
         vga.write("unknown arg");
     }
+    disable_interrupts();
     hang();
 }
 

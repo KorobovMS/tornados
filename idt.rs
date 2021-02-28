@@ -140,7 +140,6 @@ fn get_kernel_cs() -> u16 {
 }
 
 pub fn hang() -> ! {
-    disable_interrupts();
     loop {
         halt();
     }
