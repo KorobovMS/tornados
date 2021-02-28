@@ -1,16 +1,16 @@
 #![no_std]
 #![feature(asm)]
-#![feature(lang_items)]
 #![feature(core_panic)]
-#![feature(panic_info_message)]
 #![feature(fmt_as_str)]
+#![feature(lang_items)]
 #![feature(naked_functions)]
+#![feature(panic_info_message)]
 
+mod entry;
 mod idt;
+mod ioport;
 mod memops;
 mod panic;
-mod vga;
-mod ioport;
-mod serial;
 mod pic;
-mod entry;
+mod serial;
+mod vga;
