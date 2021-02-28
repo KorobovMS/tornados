@@ -1,3 +1,6 @@
+use serial;
+use pic;
+
 extern "C" {
     static mut _idt: u64;
 }
@@ -82,6 +85,38 @@ fn virtualization() {
     core::panicking::panic("virtualization");
 }
 
+#[naked]
+extern "C" fn timer() {
+    unsafe {
+        asm!("pusha",
+             "call _timer",
+             "popa",
+             "iretd",
+             options(noreturn)); }
+}
+
+#[no_mangle]
+fn _timer() {
+    serial::write_str(".");
+    pic::end_of_interrupt(0);
+}
+
+#[naked]
+extern "C" fn keyboard() {
+    unsafe {
+        asm!("pusha",
+             "call _keyboard",
+             "popa",
+             "iretd",
+             options(noreturn)); }
+}
+
+#[no_mangle]
+fn _keyboard() {
+    serial::write_str("k");
+    pic::end_of_interrupt(1);
+}
+
 fn setup_idt_descriptor(idt: *mut u64, idx: u8, handler: *const ()) {
     let handler = handler as u64;
     let lo = handler & 0xFFFF;
@@ -118,6 +153,8 @@ pub fn setup_idt() {
         setup_idt_descriptor(idt, 18, machine_check as *const ());
         setup_idt_descriptor(idt, 19, simd_floating_point as *const ());
         setup_idt_descriptor(idt, 20, virtualization as *const ());
+        setup_idt_descriptor(idt, 0x20, timer as *const ());
+        setup_idt_descriptor(idt, 0x21, keyboard as *const ());
     }
 }
 
