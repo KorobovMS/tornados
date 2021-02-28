@@ -19,9 +19,9 @@ const ICW4_BUF_SLAVE: u8 = 0x08;
 const ICW4_BUF_MASTER: u8 = 0x0C;
 const ICW4_SFNM: u8 = 0x10;
 
-pub fn disable_pic() {
-    PIC1_DATA.out8(0xff);
-    PIC2_DATA.out8(0xff);
+pub fn mask(mask1: u8, mask2: u8) {
+    PIC1_DATA.out8(mask1);
+    PIC2_DATA.out8(mask2);
 }
 
 pub fn end_of_interrupt(irq: u8) {

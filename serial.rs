@@ -27,6 +27,7 @@ pub fn serial_init() {
         panic!("cannot initialize serial");
     }
     SERIAL_MCR.out8(0x0F);
+    SERIAL_IER.out8(0x01);
 }
 
 pub fn write_str(s: &str) {
@@ -34,4 +35,8 @@ pub fn write_str(s: &str) {
         while (SERIAL_LSR.in8() & 0x20) == 0 {}
         SERIAL_DR.out8(b);
     }
+}
+
+pub fn get_byte() -> u8 {
+    return SERIAL_DR.in8();
 }
