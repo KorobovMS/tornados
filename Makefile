@@ -14,9 +14,8 @@ RUSTDEBUG=-O
 endif
 RUSTFLAGS=--crate-type=rlib --target i686-unknown-none.json $(RUSTDEBUG) -C lto --error-format $(RUSTFORMAT) --extern core=libcore.rlib --extern compiler_builtins=libcompiler_builtins.rlib
 
-OBJ_RUST=kernel.rlib
 OBJ_ASM=boot.o
-OBJS_RUST=$(OBJ_RUST) libcompiler_builtins.rlib libcore.rlib
+OBJS_RUST=libkernel.rlib libcompiler_builtins.rlib libcore.rlib
 
 .PHONY: all
 all: kernel.elf
@@ -24,8 +23,8 @@ all: kernel.elf
 $(OBJ_ASM): %.o: %.s
 	$(AS) $< -o $@ $(ASFLAGS)
 
-$(OBJ_RUST): %.rlib: %.rs
-	$(RUSTC) $< -o $@ $(RUSTFLAGS)
+libkernel.rlib: $(wildcard *.rs)
+	$(RUSTC) lib.rs -o $@ $(RUSTFLAGS)
 
 kernel.elf: $(OBJ_ASM) $(OBJS_RUST) linker.lds
 	$(LD) -T linker.lds $(OBJ_ASM) --start-group $(OBJS_RUST) --end-group -o $@ --gc-sections
@@ -34,3 +33,4 @@ kernel.elf: $(OBJ_ASM) $(OBJS_RUST) linker.lds
 clean:
 	$(RM) *.o
 	$(RM) *.elf
+	$(RM) libkernel.rlib
