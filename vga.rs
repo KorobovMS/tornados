@@ -47,6 +47,13 @@ impl Vga {
                 self.set_char(self.row, self.col, b, 0x0E, 0x01);
                 self.col = self.col + 1;
             }
+            if self.col == self.width {
+                self.col = 0;
+                self.row = self.row + 1;
+            }
+            if self.row == self.height {
+                self.row = 0;
+            }
         }
     }
 }
