@@ -7,7 +7,7 @@ pub struct Vga {
 }
 
 impl Vga {
-    pub fn new() -> Vga {
+    pub const fn new() -> Vga {
         Vga {
             vga: 0xB8000 as *mut u16,
             row: 0u8,
