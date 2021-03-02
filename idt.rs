@@ -9,135 +9,120 @@ extern "C" {
     static mut _idt: u64;
 }
 
-fn divide_error() {
+macro_rules! interrupt_handler {
+    ($isr_entry:ident $isr_name:ident $isr_body:block) => {
+        #[naked]
+        extern "C" fn $isr_entry() {
+            unsafe {
+                asm!("pusha",
+                     concat!("call ", stringify!($isr_name)),
+                     "popa",
+                     "iretd",
+                     options(noreturn)); }
+        }
+
+        #[no_mangle]
+        fn $isr_name()
+            $isr_body
+    };
+}
+
+interrupt_handler!{isr_0 divide_error {
     core::panicking::panic("divide error");
-}
+}}
 
-fn debug() {
+interrupt_handler!{isr_1 debug {
     core::panicking::panic("debug");
-}
+}}
 
-fn nmi() {
+interrupt_handler!{isr_2 nmi {
     core::panicking::panic("nmi");
-}
+}}
 
-fn breakpoint() {
+interrupt_handler!{isr_3 breakpoint {
     core::panicking::panic("breakpoint");
-}
+}}
 
-fn overflow() {
+interrupt_handler!{isr_4 overflow {
     core::panicking::panic("overflow");
-}
+}}
 
-fn bound_range_exceeded() {
+interrupt_handler!{isr_5 bound_range_exceeded {
     core::panicking::panic("bound range exceeded");
-}
+}}
 
-fn invalid_opcode() {
+interrupt_handler!{isr_6 invalid_opcode {
     core::panicking::panic("invalid opcode");
-}
+}}
 
-fn device_not_available() {
+interrupt_handler!{isr_7 device_not_available {
     core::panicking::panic("device not available");
-}
+}}
 
-fn double_fault() {
+interrupt_handler!{isr_8 double_fault {
     core::panicking::panic("double fault");
-}
+}}
 
-fn coprocessor_segment_overrun() {
+interrupt_handler!{isr_9 coprocessor_segment_overrun {
     core::panicking::panic("coprocessor segment overrun");
-}
+}}
 
-fn invalid_tss() {
+interrupt_handler!{isr_10 invalid_tss {
     core::panicking::panic("invalid tss");
-}
+}}
 
-fn segment_not_present() {
+interrupt_handler!{isr_11 segment_not_present {
     core::panicking::panic("segment not present");
-}
+}}
 
-fn stack_fault() {
+interrupt_handler!{isr_12 stack_fault {
     core::panicking::panic("stack fault");
-}
+}}
 
-fn general_protection() {
+interrupt_handler!{isr_13 general_protection {
     core::panicking::panic("general protection");
-}
+}}
 
-fn page_fault() {
+interrupt_handler!{isr_14 page_fault {
     core::panicking::panic("page fault");
-}
+}}
 
-fn x87_fpu_floating_point_error() {
+interrupt_handler!{isr_16 x87_fpu_floating_point_error {
     core::panicking::panic("x87 fpu floating point error");
-}
+}}
 
-fn alignment_check() {
+interrupt_handler!{isr_17 alignment_check {
     core::panicking::panic("alignment check");
-}
+}}
 
-fn machine_check() {
+interrupt_handler!{isr_18 machine_check {
     core::panicking::panic("machine check");
-}
+}}
 
-fn simd_floating_point() {
+interrupt_handler!{isr_19 simd_floating_point {
     core::panicking::panic("simd floating point");
-}
+}}
 
-fn virtualization() {
+interrupt_handler!{isr_20 virtualization {
     core::panicking::panic("virtualization");
-}
+}}
 
-#[naked]
-extern "C" fn timer() {
-    unsafe {
-        asm!("pusha",
-             "call _timer",
-             "popa",
-             "iretd",
-             options(noreturn)); }
-}
-
-#[no_mangle]
-fn _timer() {
-    serial::write_str(".");
+interrupt_handler!{isr_32 timer {
+    serial::write_str("!");
     pic::end_of_interrupt(0);
-}
+}}
 
-#[naked]
-extern "C" fn keyboard() {
-    unsafe {
-        asm!("pusha",
-             "call _keyboard",
-             "popa",
-             "iretd",
-             options(noreturn)); }
-}
-
-#[no_mangle]
-fn _keyboard() {
+interrupt_handler!{isr_33 keyboard {
     serial::write_str("k");
     pic::end_of_interrupt(1);
-}
+}}
 
-#[naked]
-extern "C" fn com1() {
-    unsafe {
-        asm!("pusha",
-             "call _com1",
-             "popa",
-             "iretd",
-             options(noreturn)); }
-}
-
-#[no_mangle]
-fn _com1() {
+interrupt_handler!{isr_36 com1 {
     let b = serial::get_byte();
     unsafe { write!(&mut VGA, "{}", b as char).unwrap(); }
     serial::write_str("4");
     pic::end_of_interrupt(4);
-}
+}}
 
 fn setup_idt_descriptor(idt: *mut u64, idx: u8, handler: *const ()) {
     let handler = handler as u64;
@@ -154,30 +139,30 @@ fn setup_idt_descriptor(idt: *mut u64, idx: u8, handler: *const ()) {
 pub fn setup_idt() {
     unsafe {
         let idt = &mut _idt as *mut u64;
-        setup_idt_descriptor(idt, 0, divide_error as *const ());
-        setup_idt_descriptor(idt, 1, debug as *const ());
-        setup_idt_descriptor(idt, 2, nmi as *const ());
-        setup_idt_descriptor(idt, 3, breakpoint as *const ());
-        setup_idt_descriptor(idt, 4, overflow as *const ());
-        setup_idt_descriptor(idt, 5, bound_range_exceeded as *const ());
-        setup_idt_descriptor(idt, 6, invalid_opcode as *const ());
-        setup_idt_descriptor(idt, 7, device_not_available as *const ());
-        setup_idt_descriptor(idt, 8, double_fault as *const ());
-        setup_idt_descriptor(idt, 9, coprocessor_segment_overrun as *const ());
-        setup_idt_descriptor(idt, 10, invalid_tss as *const ());
-        setup_idt_descriptor(idt, 11, segment_not_present as *const ());
-        setup_idt_descriptor(idt, 12, stack_fault as *const ());
-        setup_idt_descriptor(idt, 13, general_protection as *const ());
-        setup_idt_descriptor(idt, 14, page_fault as *const ());
+        setup_idt_descriptor(idt, 0, isr_0 as *const ());
+        setup_idt_descriptor(idt, 1, isr_1 as *const ());
+        setup_idt_descriptor(idt, 2, isr_2 as *const ());
+        setup_idt_descriptor(idt, 3, isr_3 as *const ());
+        setup_idt_descriptor(idt, 4, isr_4 as *const ());
+        setup_idt_descriptor(idt, 5, isr_5 as *const ());
+        setup_idt_descriptor(idt, 6, isr_6 as *const ());
+        setup_idt_descriptor(idt, 7, isr_7 as *const ());
+        setup_idt_descriptor(idt, 8, isr_8 as *const ());
+        setup_idt_descriptor(idt, 9, isr_9 as *const ());
+        setup_idt_descriptor(idt, 10, isr_10 as *const ());
+        setup_idt_descriptor(idt, 11, isr_11 as *const ());
+        setup_idt_descriptor(idt, 12, isr_12 as *const ());
+        setup_idt_descriptor(idt, 13, isr_13 as *const ());
+        setup_idt_descriptor(idt, 14, isr_14 as *const ());
         // No interrupt 15
-        setup_idt_descriptor(idt, 16, x87_fpu_floating_point_error as *const ());
-        setup_idt_descriptor(idt, 17, alignment_check as *const ());
-        setup_idt_descriptor(idt, 18, machine_check as *const ());
-        setup_idt_descriptor(idt, 19, simd_floating_point as *const ());
-        setup_idt_descriptor(idt, 20, virtualization as *const ());
-        setup_idt_descriptor(idt, 0x20, timer as *const ());
-        setup_idt_descriptor(idt, 0x21, keyboard as *const ());
-        setup_idt_descriptor(idt, 0x24, com1 as *const ());
+        setup_idt_descriptor(idt, 16, isr_16 as *const ());
+        setup_idt_descriptor(idt, 17, isr_17 as *const ());
+        setup_idt_descriptor(idt, 18, isr_18 as *const ());
+        setup_idt_descriptor(idt, 19, isr_19 as *const ());
+        setup_idt_descriptor(idt, 20, isr_20 as *const ());
+        setup_idt_descriptor(idt, 0x20, isr_32 as *const ());
+        setup_idt_descriptor(idt, 0x21, isr_33 as *const ());
+        setup_idt_descriptor(idt, 0x24, isr_36 as *const ());
     }
 }
 
