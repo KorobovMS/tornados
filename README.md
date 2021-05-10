@@ -29,5 +29,5 @@ After this two options are available:
 # Run
 
 ```console
-qemu-system-x86_64 -kernel kernel.elf -serial stdio
+qemu-system-i386 -kernel kernel.elf -serial stdio
 ```
