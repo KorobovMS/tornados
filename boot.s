@@ -33,7 +33,7 @@ _gdt:
 .hword 0x0 /* Base */
 .byte 0x0 /* Base */
 .byte 0x9A /* P(1) | DPL(00) | S(1) | Type(1010) */
-.byte 0xCF /* G(1) | D/B(1) | L(1) | Limit(4) */
+.byte 0xCF /* G(1) | D/B(1) | L(0) | AVL(0) | Limit(1111) */
 .byte 0x0 /* Base */
 
 /* Kernel data segment descriptor */
@@ -41,7 +41,7 @@ _gdt:
 .hword 0x0 /* Base */
 .byte 0x0 /* Base */
 .byte 0x92 /* P(1) | DPL(00) | S(1) | Type(0010) */
-.byte 0xCF /* G(1) | D/B(1) | L(1) | Limit(4) */
+.byte 0xCF /* G(1) | D/B(1) | L(0) | AVL(0) | Limit(1111) */
 .byte 0x0 /* Base */
 
 /* Other descriptors */
