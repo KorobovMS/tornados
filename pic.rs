@@ -31,6 +31,11 @@ pub fn end_of_interrupt(irq: u8) {
     PIC1_CMD.out8(PIC_EOI);
 }
 
+#[no_mangle]
+pub extern "C" fn end_of_timer_interrupt() {
+    end_of_interrupt(0);
+}
+
 pub fn remap(off1: u8, off2: u8) {
     let mask1 = PIC1_DATA.in8();
     let mask2 = PIC2_DATA.in8();

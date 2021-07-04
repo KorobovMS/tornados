@@ -14,4 +14,5 @@ mod memops;
 mod panic;
 mod pic;
 mod serial;
+mod sched;
 mod vga;

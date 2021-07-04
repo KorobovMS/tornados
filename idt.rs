@@ -107,10 +107,38 @@ interrupt_handler!{isr_20 virtualization {
     core::panicking::panic("virtualization");
 }}
 
-interrupt_handler!{isr_32 timer {
-    serial::write_str("!");
-    pic::end_of_interrupt(0);
-}}
+#[naked]
+extern "C" fn isr_32() {
+    unsafe {
+        asm!(
+           "push eax",
+           "push ebx",
+           "push ecx",
+           "push edx",
+           "push esi",
+           "push edi",
+           "push ebp",
+
+           "push esp",
+           "call save_stack_ptr",
+           "pop esp",
+
+           "call end_of_timer_interrupt",
+
+           "call get_next_stack",
+           "mov esp, eax",
+           "pop ebp",
+           "pop edi",
+           "pop esi",
+           "pop edx",
+           "pop ecx",
+           "pop ebx",
+           "pop eax",
+           "iretd",
+           options(noreturn)
+            );
+    }
+}
 
 interrupt_handler!{isr_33 keyboard {
     serial::write_str("k");
