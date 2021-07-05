@@ -12,7 +12,7 @@ RUSTDEBUG=-C debuginfo=2 -C opt-level=0
 else
 RUSTDEBUG=-O
 endif
-RUSTFLAGS=--crate-type=rlib --target i686-unknown-none.json $(RUSTDEBUG) -C lto --error-format $(RUSTFORMAT) --extern core=libcore.rlib --extern compiler_builtins=libcompiler_builtins.rlib
+RUSTFLAGS=--crate-type=rlib --target i686-unknown-none.json $(RUSTDEBUG) -C lto --error-format $(RUSTFORMAT) --extern core=libcore.rlib --extern compiler_builtins=libcompiler_builtins.rlib -A dead_code
 
 OBJ_ASM=boot.o
 OBJS_RUST=libkernel.rlib libcompiler_builtins.rlib libcore.rlib
