@@ -127,6 +127,7 @@ extern "C" fn isr_32() {
 
            "call get_next_stack",
            "mov esp, eax",
+
            "pop ebp",
            "pop edi",
            "pop esi",
@@ -134,6 +135,7 @@ extern "C" fn isr_32() {
            "pop ecx",
            "pop ebx",
            "pop eax",
+
            "iretd",
            options(noreturn)
             );
@@ -156,7 +158,7 @@ fn setup_idt_descriptor(idt: *mut u64, idx: u8, handler: *const ()) {
     let handler = handler as u64;
     let lo = handler & 0xFFFF;
     let hi = ((handler >> 16) & 0xFFFF) << 48;
-    let kernel_cs = 0x8 as u16;
+    let kernel_cs = 0x8u16;
     let cs = (kernel_cs as u64) << 16;
     let fl = 0x8E00u64 << 32;
     let idt_desc: u64 = lo | cs | fl | hi;

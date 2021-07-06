@@ -2,8 +2,8 @@ use ioport::Port;
 
 const SERIAL_BASE: u16 = 0x3f8;
 
-static SERIAL_DR: Port = Port::new(SERIAL_BASE + 0);
-static SERIAL_DLAB_DIV_LSB: Port = Port::new(SERIAL_BASE + 0);
+static SERIAL_DR: Port = Port::new(SERIAL_BASE);
+static SERIAL_DLAB_DIV_LSB: Port = Port::new(SERIAL_BASE);
 static SERIAL_IER: Port = Port::new(SERIAL_BASE + 1);
 static SERIAL_DLAB_DIV_MSB: Port = Port::new(SERIAL_BASE + 1);
 static SERIAL_II: Port = Port::new(SERIAL_BASE + 2);
@@ -38,5 +38,5 @@ pub fn write_str(s: &str) {
 }
 
 pub fn get_byte() -> u8 {
-    return SERIAL_DR.in8();
+    SERIAL_DR.in8()
 }

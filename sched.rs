@@ -78,7 +78,7 @@ pub extern "C" fn get_next_stack() -> u32 {
    unsafe {
        let (new_idx, next) = next_idx(CURRENT_THREAD_IDX);
        CURRENT_THREAD_IDX = new_idx;
-       return next.esp;
+       next.esp
    }
 }
 
