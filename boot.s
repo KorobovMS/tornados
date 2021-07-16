@@ -68,9 +68,6 @@ _gdt_ptr:
 .code32
 .global _start
 _start:
-        lea esp, _stack_top
-        mov ebp, esp
-        and esp, 0xFFFFFFF0
         lgdt _gdt_ptr
         jmp KERNEL_CS:_new_cs
 _new_cs:
@@ -80,6 +77,9 @@ _new_cs:
         mov es, ax
         mov fs, ax
         mov gs, ax
+        lea esp, _stack_top
+        mov ebp, esp
+        and esp, 0xFFFFFFF0
         lidt _idt_ptr
         call kernel_main
 .size _start, . - _start
