@@ -3,12 +3,20 @@ use idt;
 use pic;
 use serial;
 use vga::Vga;
-use sched::{create_kernel_thread, create_user_thread};
+use sched::{create_kernel_thread, create_user_thread, start_scheduler};
+
+fn busy_wait() {
+    let mut i = 0;
+    while i < 1000000 {
+        i += 1;
+    }
+}
 
 fn thread1_proc()
 {
     loop {
         serial::write_str("1");
+        busy_wait();
     }
 }
 
@@ -16,14 +24,33 @@ fn thread2_proc()
 {
     loop {
         serial::write_str("2");
+        busy_wait();
     }
 }
 
+
 fn thread3_proc()
+{
+    loop {
+        serial::write_str("3");
+        busy_wait();
+    }
+}
+
+fn thread4_proc()
+{
+    loop {
+        serial::write_str("4");
+        busy_wait();
+    }
+}
+
+fn thread5_proc()
 {
     let mut vga = Vga::new();
     loop {
         vga.write("123");
+        busy_wait();
     }
 }
 
@@ -39,7 +66,8 @@ pub fn kernel_main() {
     vga.clear_screen();
     create_kernel_thread(thread1_proc as *const ());
     create_kernel_thread(thread2_proc as *const ());
-    create_user_thread(thread3_proc as *const ());
-    idt::enable_interrupts();
-    idt::hang();
+    create_kernel_thread(thread3_proc as *const ());
+    create_kernel_thread(thread4_proc as *const ());
+    create_user_thread(thread5_proc as *const ());
+    start_scheduler();
 }

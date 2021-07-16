@@ -60,7 +60,7 @@ const MAX_THREADS: usize = 5;
 const STACK_SIZE: usize = 16*1024;
 static mut THREADS: [Option<Thread>; MAX_THREADS] = [None; MAX_THREADS];
 static mut STACKS: [[u8; STACK_SIZE]; MAX_THREADS] = [[0; STACK_SIZE]; MAX_THREADS];
-static mut CURRENT_THREAD_IDX: usize = MAX_THREADS - 1;
+static mut CURRENT_THREAD_IDX: usize = 0;
 static mut CURRENT_THREAD_COUNT: usize = 0;
 
 const X86_EFLAGS_BASE: u32 = 0b10;
@@ -180,5 +180,15 @@ pub fn invoke_scheduler() -> ! {
         let (idx, thread) = next_idx(CURRENT_THREAD_IDX);
         CURRENT_THREAD_IDX = idx;
         switch_to_thread(thread);
+    }
+}
+
+pub fn start_scheduler() -> ! {
+    unsafe {
+        if let Some(ref thread) = THREADS[0] {
+            switch_to_thread(thread);
+        } else {
+            panic!("No threads to run");
+        }
     }
 }
