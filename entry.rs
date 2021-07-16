@@ -3,35 +3,27 @@ use idt;
 use pic;
 use serial;
 use vga::Vga;
-use sched::create_kernel_thread;
+use sched::{create_kernel_thread, create_user_thread};
 
 fn thread1_proc()
 {
     loop {
-        idt::disable_interrupts();
         serial::write_str("1");
-        idt::enable_interrupts();
-        for _ in 0..1000 {}
     }
 }
 
 fn thread2_proc()
 {
     loop {
-        idt::disable_interrupts();
         serial::write_str("2");
-        idt::enable_interrupts();
-        for _ in 0..1000 {}
     }
 }
 
 fn thread3_proc()
 {
+    let mut vga = Vga::new();
     loop {
-        idt::disable_interrupts();
-        serial::write_str("3");
-        idt::enable_interrupts();
-        for _ in 0..1000 {}
+        vga.write("123");
     }
 }
 
@@ -47,7 +39,7 @@ pub fn kernel_main() {
     vga.clear_screen();
     create_kernel_thread(thread1_proc as *const ());
     create_kernel_thread(thread2_proc as *const ());
-    create_kernel_thread(thread3_proc as *const ());
+    create_user_thread(thread3_proc as *const ());
     idt::enable_interrupts();
     idt::hang();
 }

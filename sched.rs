@@ -2,16 +2,57 @@ use core::option::Option;
 use core::marker::Copy;
 use core::clone::Clone;
 
-#[derive(Copy, Clone)]
-struct Thread {
+#[repr(C)]
+pub struct InterruptState {
+    ebp: u32,
+    edi: u32,
+    esi: u32,
+    edx: u32,
+    ecx: u32,
+    ebx: u32,
+    eax: u32,
+    eip: u32,
+    cs: u32,
+    eflags: u32,
     esp: u32,
+    ss: u32,
 }
 
-impl Thread {
-    fn new() -> Self {
-        Self {
-            esp: 0,
-        }
+#[derive(Copy, Clone)]
+struct Thread {
+    eax: u32,
+    ebx: u32,
+    ecx: u32,
+    edx: u32,
+    esi: u32,
+    edi: u32,
+    ebp: u32,
+    esp: u32,
+    eip: u32,
+    eflags: u32,
+    cs: u32,
+    ss: u32,
+}
+
+unsafe fn save_interrupt_state(int_state: *const InterruptState, thread: &mut Thread) {
+    thread.eax = (*int_state).eax;
+    thread.ebx = (*int_state).ebx;
+    thread.ecx = (*int_state).ecx;
+    thread.edx = (*int_state).edx;
+    thread.esi = (*int_state).esi;
+    thread.edi = (*int_state).edi;
+    thread.ebp = (*int_state).ebp;
+    thread.eip = (*int_state).eip;
+    thread.eflags = (*int_state).eflags;
+    thread.cs = (*int_state).cs;
+    if thread.cs & 0b11 == 0b11 {
+        // interrupted user-mode
+        thread.esp = (*int_state).esp;
+        thread.ss = (*int_state).ss;
+    } else {
+        // interrupted kernel-mode
+        thread.esp = (int_state as *const u32).offset(10) as u32;
+        thread.ss = KERNEL_DS
     }
 }
 
@@ -44,20 +85,56 @@ const X86_EFLAGS_VIF: u32 = 1 << 19;
 const X86_EFLAGS_VIP: u32 = 1 << 20;
 const X86_EFLAGS_ID: u32 = 1 << 21;
 
+const KERNEL_CS: u32 = 0x8;
+const KERNEL_DS: u32 = 0x10;
+const USER_CS: u32 = 0x1B;
+const USER_DS: u32 = 0x23;
+
 pub fn create_kernel_thread(entry: *const ()) {
     unsafe {
         if CURRENT_THREAD_COUNT == MAX_THREADS {
             panic!("No more space for threads");
         }
-        let mut thread = Thread::new();
         let stack = &STACKS[CURRENT_THREAD_COUNT] as *const u8;
-        let stack = stack as *mut u32;
-        let size = (STACK_SIZE / 4) as isize;
-        *stack.offset(size - 1) = X86_EFLAGS_BASE | X86_EFLAGS_IF; // EFLAGS
-        *stack.offset(size - 2) = 0x8; // KERNEL_CS
-        *stack.offset(size - 3) = entry as u32; // EIP
+        let thread = Thread {
+            eax: 0,
+            ebx: 0,
+            ecx: 0,
+            edx: 0,
+            esi: 0,
+            edi: 0,
+            ebp: 0,
+            esp: stack.offset(STACK_SIZE as isize) as u32,
+            eip: entry as u32,
+            eflags: X86_EFLAGS_BASE | X86_EFLAGS_IF,
+            cs: KERNEL_CS,
+            ss: KERNEL_DS,
+        };
+        THREADS[CURRENT_THREAD_COUNT] = Some(thread);
+        CURRENT_THREAD_COUNT += 1;
+    }
+}
 
-        thread.esp = stack.offset(size - 10) as u32;
+pub fn create_user_thread(entry: *const ()) {
+    unsafe {
+        if CURRENT_THREAD_COUNT == MAX_THREADS {
+            panic!("No more space for threads");
+        }
+        let stack = &STACKS[CURRENT_THREAD_COUNT] as *const u8;
+        let thread = Thread {
+            eax: 0,
+            ebx: 0,
+            ecx: 0,
+            edx: 0,
+            esi: 0,
+            edi: 0,
+            ebp: 0,
+            esp: stack.offset(STACK_SIZE as isize) as u32,
+            eip: entry as u32,
+            eflags: X86_EFLAGS_BASE | X86_EFLAGS_IF,
+            cs: USER_CS,
+            ss: USER_DS,
+        };
         THREADS[CURRENT_THREAD_COUNT] = Some(thread);
         CURRENT_THREAD_COUNT += 1;
     }
@@ -74,20 +151,34 @@ unsafe fn next_idx(current_idx: usize) -> (usize, &'static Thread) {
 }
 
 #[no_mangle]
-pub extern "C" fn get_next_stack() -> u32 {
-   unsafe {
-       let (new_idx, next) = next_idx(CURRENT_THREAD_IDX);
-       CURRENT_THREAD_IDX = new_idx;
-       next.esp
-   }
-}
-
-#[no_mangle]
-pub extern "C" fn save_stack_ptr(esp: u32) {
+pub extern "C" fn save_current_state(int_state: *mut InterruptState) {
     unsafe {
-        if let Some(thread) = &mut THREADS[CURRENT_THREAD_IDX] {
-            thread.esp = esp;
+        if let Some(ref mut thread) = THREADS[CURRENT_THREAD_IDX] {
+            save_interrupt_state(int_state, thread);
+            for _ in 0..10 {}
         }
     }
 }
 
+extern "C" {
+    fn restore_thread(eax: u32, ebx: u32, ecx: u32, edx: u32,
+                      esi: u32, edi: u32, ebp: u32, esp: u32,
+                      eip: u32, eflags: u32, cs: u32, ss: u32) -> !;
+}
+
+fn switch_to_thread(t: &Thread) -> ! {
+    unsafe {
+        restore_thread(t.eax, t.ebx, t.ecx, t.edx,
+                       t.esi, t.edi, t.ebp, t.esp,
+                       t.eip, t.eflags, t.cs, t.ss);
+    }
+}
+
+#[no_mangle]
+pub fn invoke_scheduler() -> ! {
+    unsafe {
+        let (idx, thread) = next_idx(CURRENT_THREAD_IDX);
+        CURRENT_THREAD_IDX = idx;
+        switch_to_thread(thread);
+    }
+}

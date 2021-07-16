@@ -111,34 +111,18 @@ interrupt_handler!{isr_20 virtualization {
 extern "C" fn isr_32() {
     unsafe {
         asm!(
-           "push eax",
-           "push ebx",
-           "push ecx",
-           "push edx",
-           "push esi",
-           "push edi",
-           "push ebp",
-
-           "push esp",
-           "call save_stack_ptr",
-           "pop esp",
-
-           "call end_of_timer_interrupt",
-
-           "call get_next_stack",
-           "mov esp, eax",
-
-           "pop ebp",
-           "pop edi",
-           "pop esi",
-           "pop edx",
-           "pop ecx",
-           "pop ebx",
-           "pop eax",
-
-           "iretd",
-           options(noreturn)
-            );
+            "push eax",
+            "push ebx",
+            "push ecx",
+            "push edx",
+            "push esi",
+            "push edi",
+            "push ebp",
+            "push esp",
+            "call save_current_state",
+            "call end_of_timer_interrupt",
+            "call invoke_scheduler",
+            options(noreturn));
     }
 }
 
