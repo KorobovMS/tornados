@@ -155,7 +155,6 @@ pub extern "C" fn save_current_state(int_state: *mut InterruptState) {
     unsafe {
         if let Some(ref mut thread) = THREADS[CURRENT_THREAD_IDX] {
             save_interrupt_state(int_state, thread);
-            for _ in 0..10 {}
         }
     }
 }
