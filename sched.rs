@@ -19,6 +19,13 @@ pub struct InterruptState {
 }
 
 #[derive(Copy, Clone)]
+enum ThreadState {
+    Running,
+    Waiting,
+    Stopped,
+}
+
+#[derive(Copy, Clone)]
 struct Thread {
     eax: u32,
     ebx: u32,
@@ -32,6 +39,8 @@ struct Thread {
     eflags: u32,
     cs: u32,
     ss: u32,
+
+    state: ThreadState,
 }
 
 unsafe fn save_interrupt_state(int_state: *const InterruptState, thread: &mut Thread) {
@@ -109,6 +118,8 @@ pub fn create_kernel_thread(entry: *const ()) {
             eflags: X86_EFLAGS_BASE | X86_EFLAGS_IF,
             cs: KERNEL_CS,
             ss: KERNEL_DS,
+
+            state: ThreadState::Running,
         };
         THREADS[CURRENT_THREAD_COUNT] = Some(thread);
         CURRENT_THREAD_COUNT += 1;
@@ -134,9 +145,21 @@ pub fn create_user_thread(entry: *const ()) {
             eflags: X86_EFLAGS_BASE | X86_EFLAGS_IF,
             cs: USER_CS,
             ss: USER_DS,
+
+            state: ThreadState::Running,
         };
         THREADS[CURRENT_THREAD_COUNT] = Some(thread);
         CURRENT_THREAD_COUNT += 1;
+    }
+}
+
+pub fn stop_thread(i: usize) {
+    unsafe {
+        if i < CURRENT_THREAD_COUNT {
+            if let Some(ref mut thread) = THREADS[i] {
+                thread.state = ThreadState::Stopped;
+            }
+        }
     }
 }
 
@@ -145,7 +168,12 @@ unsafe fn next_idx(current_idx: usize) -> (usize, &'static Thread) {
     loop {
         idx = (idx + 1) % MAX_THREADS;
         if let Some(thread) = &THREADS[idx] {
-            return (idx, thread);
+            if let ThreadState::Running = thread.state {
+                return (idx, thread)
+            }
+        }
+        if idx == current_idx {
+            panic!("No threads are running");
         }
     }
 }

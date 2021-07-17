@@ -3,7 +3,7 @@ use idt;
 use pic;
 use serial;
 use vga::Vga;
-use sched::{create_kernel_thread, create_user_thread, start_scheduler};
+use sched;
 
 fn busy_wait() {
     let mut i = 0;
@@ -64,10 +64,10 @@ pub fn kernel_main() {
     serial::write_str("Booting kernel...\n");
     let vga = Vga::new();
     vga.clear_screen();
-    create_kernel_thread(thread1_proc as *const ());
-    create_kernel_thread(thread2_proc as *const ());
-    create_kernel_thread(thread3_proc as *const ());
-    create_kernel_thread(thread4_proc as *const ());
-    create_user_thread(thread5_proc as *const ());
-    start_scheduler();
+    sched::create_kernel_thread(thread1_proc as *const ());
+    sched::create_kernel_thread(thread2_proc as *const ());
+    sched::create_kernel_thread(thread3_proc as *const ());
+    sched::create_kernel_thread(thread4_proc as *const ());
+    sched::create_user_thread(thread5_proc as *const ());
+    sched::start_scheduler();
 }
