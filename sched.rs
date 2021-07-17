@@ -153,14 +153,30 @@ pub fn create_user_thread(entry: *const ()) {
     }
 }
 
-pub fn stop_thread(i: usize) {
+fn set_thread_state(idx: usize, state: ThreadState) {
     unsafe {
-        if i < CURRENT_THREAD_COUNT {
-            if let Some(ref mut thread) = THREADS[i] {
-                thread.state = ThreadState::Stopped;
+        if idx < CURRENT_THREAD_COUNT {
+            if let Some(ref mut thread) = THREADS[idx] {
+                match thread.state {
+                    ThreadState::Stopped => {},
+                    ThreadState::Waiting |
+                    ThreadState::Running => thread.state = state,
+                }
             }
         }
     }
+}
+
+pub fn stop_thread(i: usize) {
+    set_thread_state(i, ThreadState::Stopped);
+}
+
+pub fn suspend_thread(i: usize) {
+    set_thread_state(i, ThreadState::Waiting);
+}
+
+pub fn resume_thread(i: usize) {
+    set_thread_state(i, ThreadState::Running);
 }
 
 unsafe fn next_idx(current_idx: usize) -> (usize, &'static Thread) {

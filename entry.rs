@@ -39,7 +39,15 @@ fn thread3_proc()
 
 fn thread4_proc()
 {
+    let mut x: u8 = 0;
     loop {
+        x = (x + 1) % 3;
+        if x == 0 {
+            sched::resume_thread(4);
+        } else {
+            sched::suspend_thread(4);
+        }
+
         serial::write_str("4");
         busy_wait();
     }
