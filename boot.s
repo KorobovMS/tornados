@@ -136,7 +136,12 @@ restore_thread:
         test eax, 3
         jz _restore_kernel_thread
 _restore_user_thread:
-        push [esp + 4*0 + 4*12] /* ss */
+        mov eax, [esp + 4*0 + 4*12]
+        mov ds, ax
+        mov es, ax
+        mov fs, ax
+        mov gs, ax
+        push eax /* ss */
         push [esp + 4*1 + 4*8] /* esp */
         push [esp + 4*2 + 4*10] /* eflags */
         push [esp + 4*3 + 4*11] /* cs */
