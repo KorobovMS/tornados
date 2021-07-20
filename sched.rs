@@ -1,22 +1,7 @@
 use core::option::Option;
 use core::marker::Copy;
 use core::clone::Clone;
-
-#[repr(C)]
-pub struct InterruptState {
-    ebp: u32,
-    edi: u32,
-    esi: u32,
-    edx: u32,
-    ecx: u32,
-    ebx: u32,
-    eax: u32,
-    eip: u32,
-    cs: u32,
-    eflags: u32,
-    esp: u32,
-    ss: u32,
-}
+use idt::InterruptState;
 
 #[derive(Copy, Clone)]
 enum ThreadState {
@@ -60,7 +45,7 @@ unsafe fn save_interrupt_state(int_state: *const InterruptState, thread: &mut Th
         thread.ss = (*int_state).ss;
     } else {
         // interrupted kernel-mode
-        thread.esp = (int_state as *const u32).offset(10) as u32;
+        thread.esp = (int_state as *const u32).offset(12) as u32;
         thread.ss = KERNEL_DS
     }
 }
