@@ -152,17 +152,18 @@ extern "C" fn handle_interrupt(int_state: &InterruptState) {
             pic::end_of_interrupt(4);
         },
         _ => {
-            panic!("oh no");
-            //let is_user_mode = (int_state.cs & 0b11) == 0b11;
-            //panic!("\
-            //    eax = {}, ebx = {}, ecx = {}, edx = {}\n\
-            //    esi = {}, edi = {}, ebp = {}, esp = {}\n\
-            //    eip = {}, eflags = {}, cs = {}, ss = {}\n",
-            //    int_state.eax, int_state.ebx, int_state.ecx, int_state.edx,
-            //    int_state.esi, int_state.edi, int_state.ebp,
-            //    if is_user_mode { int_state.esp } else { 0 }, // TODO
-            //    int_state.eip, int_state.eflags, int_state.cs,
-            //    if is_user_mode { int_state.ss } else { 0 }); // TODO
+            let is_user_mode = (int_state.cs & 0b11) == 0b11;
+            panic!("\
+                interrupt {}, error {}\n\
+                eax 0x{:08X} ebx 0x{:08X} ecx 0x{:08X} edx 0x{:08X}\n\
+                esi 0x{:08X} edi 0x{:08X} ebp 0x{:08X} esp 0x{:08X}\n\
+                eip 0x{:08X} efl 0x{:08X} cs  0x{:08X} ss  0x{:08X}\n",
+                int_state.vec, int_state.err,
+                int_state.eax, int_state.ebx, int_state.ecx, int_state.edx,
+                int_state.esi, int_state.edi, int_state.ebp,
+                if is_user_mode { int_state.esp } else { 0 }, // TODO
+                int_state.eip, int_state.eflags, int_state.cs,
+                if is_user_mode { int_state.ss } else { 0 }); // TODO
         },
     }
 }

@@ -3,13 +3,13 @@ use vga::Vga;
 
 #[panic_handler]
 #[no_mangle]
-pub extern "C" fn rust_begin_unwind(_info: &core::panic::PanicInfo) -> ! {
+pub extern "C" fn rust_begin_unwind(info: &core::panic::PanicInfo) -> ! {
     let mut vga = Vga::new();
-    if let Some(arg) = _info.message() {
-        if let Some(msg) = arg.as_str() {
-            vga.write(msg);
-        } else {
-            vga.write("unknown msg");
+    vga.clear_screen();
+    if let Some(arg) = info.message() {
+        let result = core::fmt::write(&mut vga, *arg);
+        if let Err(core::fmt::Error) = result {
+            vga.write("oh no");
         }
     } else {
         vga.write("unknown arg");
