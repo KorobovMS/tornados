@@ -71,7 +71,7 @@ macro_rules! interrupt_handler_without_code {
         extern "C" fn $isr_entry() {
             unsafe {
                 asm!(
-                    // Zero for interrupt stack consistency
+                    // Zero for interrupt stack layout consistency
                     "push 0",
                     // Push vector's number
                     concat!("push ", stringify!($vec_num)),
