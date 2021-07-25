@@ -1,3 +1,4 @@
+use sched;
 use serial;
 use pic;
 use vga::Vga;
@@ -9,23 +10,20 @@ extern "C" {
     static mut _idt: u64;
 }
 
-#[repr(C)]
-pub struct InterruptState {
-    pub ebp: u32,
-    pub edi: u32,
-    pub esi: u32,
-    pub edx: u32,
-    pub ecx: u32,
-    pub ebx: u32,
-    pub eax: u32,
-    pub vec: u32,
-    pub err: u32,
-    pub eip: u32,
-    pub cs: u32,
-    pub eflags: u32,
-    pub esp: u32,
-    pub ss: u32,
-}
+pub const X86_INT_STATE_EBP: u32 = 0;
+pub const X86_INT_STATE_EDI: u32 = 1;
+pub const X86_INT_STATE_ESI: u32 = 2;
+pub const X86_INT_STATE_EDX: u32 = 3;
+pub const X86_INT_STATE_ECX: u32 = 4;
+pub const X86_INT_STATE_EBX: u32 = 5;
+pub const X86_INT_STATE_EAX: u32 = 6;
+pub const X86_INT_STATE_VEC: u32 = 7;
+pub const X86_INT_STATE_ERR: u32 = 8;
+pub const X86_INT_STATE_EIP: u32 = 9;
+pub const X86_INT_STATE_CS: u32 = 10;
+pub const X86_INT_STATE_EFLAGS: u32 = 11;
+pub const X86_INT_STATE_ESP: u32 = 12;
+pub const X86_INT_STATE_SS: u32 = 13;
 
 macro_rules! interrupt_handler_with_code {
     ($isr_entry:ident $vec_num:expr) => {
@@ -126,20 +124,15 @@ const X86_EXC_MACHINE_CHECK: u32 = 18;
 const X86_EXC_SIMD_FLOATING_POINT: u32 = 19;
 const X86_EXC_VIRTUALIZATION: u32 = 20;
 
-extern "C" {
-    fn save_current_state(int_state: *const InterruptState);
-    fn invoke_scheduler();
-}
-
 #[no_mangle]
-extern "C" fn handle_interrupt(int_state: &InterruptState) {
-    match int_state.vec {
+extern "C" fn handle_interrupt(int_state: *const u32) {
+    let vec: u32 = unsafe { *int_state.offset(7) };
+    let err: u32 = unsafe { *int_state.offset(8) };
+    match vec {
         0x20 => {
+            sched::save_current_state(int_state);
             pic::end_of_interrupt(0);
-            unsafe {
-                save_current_state(int_state as *const InterruptState);
-                invoke_scheduler();
-            }
+            sched::invoke_scheduler();
         },
         0x21 => {
             serial::write_str("k");
@@ -152,18 +145,12 @@ extern "C" fn handle_interrupt(int_state: &InterruptState) {
             pic::end_of_interrupt(4);
         },
         _ => {
-            let is_user_mode = (int_state.cs & 0b11) == 0b11;
+            let thread = sched::current();
             panic!("\
                 interrupt {}, error {}\n\
-                eax 0x{:08X} ebx 0x{:08X} ecx 0x{:08X} edx 0x{:08X}\n\
-                esi 0x{:08X} edi 0x{:08X} ebp 0x{:08X} esp 0x{:08X}\n\
-                eip 0x{:08X} efl 0x{:08X} cs  0x{:08X} ss  0x{:08X}\n",
-                int_state.vec, int_state.err,
-                int_state.eax, int_state.ebx, int_state.ecx, int_state.edx,
-                int_state.esi, int_state.edi, int_state.ebp,
-                if is_user_mode { int_state.esp } else { 0 }, // TODO
-                int_state.eip, int_state.eflags, int_state.cs,
-                if is_user_mode { int_state.ss } else { 0 }); // TODO
+                thread:\n\
+                {}",
+                vec, err, thread);
         },
     }
 }

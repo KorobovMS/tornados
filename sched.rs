@@ -1,7 +1,7 @@
 use core::option::Option;
 use core::marker::Copy;
 use core::clone::Clone;
-use idt::InterruptState;
+use core::fmt::{Display, Formatter, Result};
 
 #[derive(Copy, Clone)]
 enum ThreadState {
@@ -11,7 +11,7 @@ enum ThreadState {
 }
 
 #[derive(Copy, Clone)]
-struct Thread {
+pub struct Thread {
     eax: u32,
     ebx: u32,
     ecx: u32,
@@ -28,25 +28,39 @@ struct Thread {
     state: ThreadState,
 }
 
-unsafe fn save_interrupt_state(int_state: *const InterruptState, thread: &mut Thread) {
-    thread.eax = (*int_state).eax;
-    thread.ebx = (*int_state).ebx;
-    thread.ecx = (*int_state).ecx;
-    thread.edx = (*int_state).edx;
-    thread.esi = (*int_state).esi;
-    thread.edi = (*int_state).edi;
-    thread.ebp = (*int_state).ebp;
-    thread.eip = (*int_state).eip;
-    thread.eflags = (*int_state).eflags;
-    thread.cs = (*int_state).cs;
-    if thread.cs & 0b11 == 0b11 {
-        // interrupted user-mode
-        thread.esp = (*int_state).esp;
-        thread.ss = (*int_state).ss;
-    } else {
-        // interrupted kernel-mode
-        thread.esp = (int_state as *const u32).offset(12) as u32;
-        thread.ss = KERNEL_DS
+impl Display for Thread {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        write!(f, "\
+            eax 0x{:08X} ebx 0x{:08X} ecx 0x{:08X} edx 0x{:08X}\n\
+            esi 0x{:08X} edi 0x{:08X} ebp 0x{:08X} esp 0x{:08X}\n\
+            eip 0x{:08X} efl 0x{:08X} cs  0x{:08X} ss  0x{:08X}\n",
+            self.eax, self.ebx, self.ecx, self.edx,
+            self.esi, self.edi, self.ebp, self.esp,
+            self.eip, self.eflags, self.cs, self.ss)
+    }
+}
+
+fn save_interrupt_state(int_state: *const u32, thread: &mut Thread) {
+    unsafe {
+        thread.ebp = *int_state.offset(0);
+        thread.edi = *int_state.offset(1);
+        thread.esi = *int_state.offset(2);
+        thread.edx = *int_state.offset(3);
+        thread.ecx = *int_state.offset(4);
+        thread.ebx = *int_state.offset(5);
+        thread.eax = *int_state.offset(6);
+        thread.eip = *int_state.offset(9);
+        thread.cs = *int_state.offset(10);
+        thread.eflags = *int_state.offset(11);
+        if thread.cs & 0b11 == 0b11 {
+            // interrupted user-mode
+            thread.esp = *int_state.offset(12);
+            thread.ss = *int_state.offset(13);
+        } else {
+            // interrupted kernel-mode
+            thread.esp = int_state.offset(12) as u32;
+            thread.ss = KERNEL_DS;
+        }
     }
 }
 
@@ -164,6 +178,10 @@ pub fn resume_thread(i: usize) {
     set_thread_state(i, ThreadState::Running);
 }
 
+pub fn current() -> &'static Thread {
+    unsafe { THREADS[CURRENT_THREAD_IDX].as_ref().unwrap() }
+}
+
 unsafe fn next_idx(current_idx: usize) -> (usize, &'static Thread) {
     let mut idx = current_idx;
     loop {
@@ -179,8 +197,7 @@ unsafe fn next_idx(current_idx: usize) -> (usize, &'static Thread) {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn save_current_state(int_state: *mut InterruptState) {
+pub fn save_current_state(int_state: *const u32) {
     unsafe {
         if let Some(ref mut thread) = THREADS[CURRENT_THREAD_IDX] {
             save_interrupt_state(int_state, thread);
@@ -202,7 +219,6 @@ fn switch_to_thread(t: &Thread) -> ! {
     }
 }
 
-#[no_mangle]
 pub fn invoke_scheduler() -> ! {
     unsafe {
         let (idx, thread) = next_idx(CURRENT_THREAD_IDX);
