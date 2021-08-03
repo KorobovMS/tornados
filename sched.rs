@@ -40,30 +40,6 @@ impl Display for Thread {
     }
 }
 
-fn save_interrupt_state(int_state: *const u32, thread: &mut Thread) {
-    unsafe {
-        thread.ebp = *int_state.offset(0);
-        thread.edi = *int_state.offset(1);
-        thread.esi = *int_state.offset(2);
-        thread.edx = *int_state.offset(3);
-        thread.ecx = *int_state.offset(4);
-        thread.ebx = *int_state.offset(5);
-        thread.eax = *int_state.offset(6);
-        thread.eip = *int_state.offset(9);
-        thread.cs = *int_state.offset(10);
-        thread.eflags = *int_state.offset(11);
-        if thread.cs & 0b11 == 0b11 {
-            // interrupted user-mode
-            thread.esp = *int_state.offset(12);
-            thread.ss = *int_state.offset(13);
-        } else {
-            // interrupted kernel-mode
-            thread.esp = int_state.offset(12) as u32;
-            thread.ss = KERNEL_DS;
-        }
-    }
-}
-
 const MAX_THREADS: usize = 5;
 const STACK_SIZE: usize = 16*1024;
 static mut THREADS: [Option<Thread>; MAX_THREADS] = [None; MAX_THREADS];
@@ -188,7 +164,7 @@ unsafe fn next_idx(current_idx: usize) -> (usize, &'static Thread) {
         idx = (idx + 1) % MAX_THREADS;
         if let Some(thread) = &THREADS[idx] {
             if let ThreadState::Running = thread.state {
-                return (idx, thread)
+                return (idx, thread);
             }
         }
         if idx == current_idx {
@@ -200,7 +176,25 @@ unsafe fn next_idx(current_idx: usize) -> (usize, &'static Thread) {
 pub fn save_current_state(int_state: *const u32) {
     unsafe {
         if let Some(ref mut thread) = THREADS[CURRENT_THREAD_IDX] {
-            save_interrupt_state(int_state, thread);
+            thread.ebp = *int_state.offset(0);
+            thread.edi = *int_state.offset(1);
+            thread.esi = *int_state.offset(2);
+            thread.edx = *int_state.offset(3);
+            thread.ecx = *int_state.offset(4);
+            thread.ebx = *int_state.offset(5);
+            thread.eax = *int_state.offset(6);
+            thread.eip = *int_state.offset(9);
+            thread.cs = *int_state.offset(10);
+            thread.eflags = *int_state.offset(11);
+            if thread.cs & 0b11 == 0b11 {
+                // interrupted user-mode
+                thread.esp = *int_state.offset(12);
+                thread.ss = *int_state.offset(13);
+            } else {
+                // interrupted kernel-mode
+                thread.esp = int_state.offset(12) as u32;
+                thread.ss = KERNEL_DS;
+            }
         }
     }
 }
