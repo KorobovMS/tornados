@@ -16,6 +16,7 @@ fn thread1_proc()
 {
     loop {
         serial::write_str("1");
+        sched::stop_thread(0);
         busy_wait();
     }
 }
@@ -24,6 +25,7 @@ fn thread2_proc()
 {
     loop {
         serial::write_str("2");
+        sched::stop_thread(1);
         busy_wait();
     }
 }
@@ -33,6 +35,7 @@ fn thread3_proc()
 {
     loop {
         serial::write_str("3");
+        sched::stop_thread(2);
         busy_wait();
     }
 }
@@ -49,6 +52,7 @@ fn thread4_proc()
         }
 
         serial::write_str("4");
+        sched::stop_thread(3);
         busy_wait();
     }
 }
@@ -58,6 +62,7 @@ fn thread5_proc()
     let mut vga = Vga::new();
     loop {
         vga.write("123");
+        sched::stop_thread(4);
         busy_wait();
     }
 }
@@ -72,6 +77,7 @@ pub fn kernel_main() {
     serial::write_str("Booting kernel...\n");
     let vga = Vga::new();
     vga.clear_screen();
+    sched::init_scheduler();
     sched::create_kernel_thread(thread1_proc as *const ());
     sched::create_kernel_thread(thread2_proc as *const ());
     sched::create_kernel_thread(thread3_proc as *const ());

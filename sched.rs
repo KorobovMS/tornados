@@ -40,12 +40,41 @@ impl Display for Thread {
     }
 }
 
+#[naked]
+extern "C" fn idle_proc() -> ! {
+    unsafe {
+        asm!(
+            "repeat:",
+            "hlt",
+            "jmp repeat",
+            options(noreturn));
+    }
+}
+
 const MAX_THREADS: usize = 5;
 const STACK_SIZE: usize = 16*1024;
 static mut THREADS: [Option<Thread>; MAX_THREADS] = [None; MAX_THREADS];
 static mut STACKS: [[u8; STACK_SIZE]; MAX_THREADS] = [[0; STACK_SIZE]; MAX_THREADS];
 static mut CURRENT_THREAD_IDX: usize = 0;
 static mut CURRENT_THREAD_COUNT: usize = 0;
+static mut IDLE_THREAD: Thread = Thread {
+    eax: 0,
+    ebx: 0,
+    ecx: 0,
+    edx: 0,
+    esi: 0,
+    edi: 0,
+    ebp: 0,
+    esp: 0,
+    eip: 0,
+    eflags: X86_EFLAGS_BASE | X86_EFLAGS_IF,
+    cs: KERNEL_CS,
+    ss: KERNEL_DS,
+
+    state: ThreadState::Running,
+};
+const IDLE_STACK_SIZE: usize = 128;
+static mut IDLE_STACK: [u8; IDLE_STACK_SIZE] = [0; IDLE_STACK_SIZE];
 
 const X86_EFLAGS_BASE: u32 = 0b10;
 const X86_EFLAGS_CF: u32 = 1 << 0;
@@ -168,13 +197,16 @@ unsafe fn next_idx(current_idx: usize) -> (usize, &'static Thread) {
             }
         }
         if idx == current_idx {
-            panic!("No threads are running");
+            return (MAX_THREADS, &IDLE_THREAD);
         }
     }
 }
 
 pub fn save_current_state(int_state: *const u32) {
     unsafe {
+        if CURRENT_THREAD_IDX == MAX_THREADS {
+            return;
+        }
         if let Some(ref mut thread) = THREADS[CURRENT_THREAD_IDX] {
             thread.ebp = *int_state.offset(0);
             thread.edi = *int_state.offset(1);
@@ -215,7 +247,8 @@ fn switch_to_thread(t: &Thread) -> ! {
 
 pub fn invoke_scheduler() -> ! {
     unsafe {
-        let (idx, thread) = next_idx(CURRENT_THREAD_IDX);
+        let start_idx = if CURRENT_THREAD_IDX == MAX_THREADS { 0 } else { CURRENT_THREAD_IDX };
+        let (idx, thread) = next_idx(start_idx);
         CURRENT_THREAD_IDX = idx;
         switch_to_thread(thread);
     }
@@ -226,7 +259,15 @@ pub fn start_scheduler() -> ! {
         if let Some(ref thread) = THREADS[0] {
             switch_to_thread(thread);
         } else {
-            panic!("No threads to run");
+            switch_to_thread(&IDLE_THREAD);
         }
+    }
+}
+
+pub fn init_scheduler() {
+    unsafe {
+        IDLE_THREAD.eip = idle_proc as usize as u32;
+        let stack = &IDLE_STACK as *const u8;
+        IDLE_THREAD.esp = stack.add(IDLE_STACK_SIZE) as u32;
     }
 }
