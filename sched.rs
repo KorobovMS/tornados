@@ -73,7 +73,7 @@ static mut IDLE_THREAD: Thread = Thread {
 
     state: ThreadState::Running,
 };
-const IDLE_STACK_SIZE: usize = 128;
+const IDLE_STACK_SIZE: usize = 4*1024;
 static mut IDLE_STACK: [u8; IDLE_STACK_SIZE] = [0; IDLE_STACK_SIZE];
 
 const X86_EFLAGS_BASE: u32 = 0b10;
