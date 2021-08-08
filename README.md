@@ -1,6 +1,6 @@
 # Introduction
 
-This project is an attempt to write a microkernel with a small environment using mainly Rust but also assembly languages for architecture specific code.
+This project is an attempt to write a kernel with a small environment using mainly Rust but also assembly languages for architecture specific code.
 
 # Prerequisites
 
