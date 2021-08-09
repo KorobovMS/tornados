@@ -28,7 +28,7 @@ After this two options are available:
 
 # Run
 
-The most simple way to run this kernel is using the Qemu. `-kernel` argument allows you to launch multiboot v1 compatible kernel.
+The simplest way to run this kernel is using the Qemu. `-kernel` argument allows you to launch multiboot 0.6.96 compatible kernel.
 
 ```console
 qemu-system-i386 -kernel kernel.elf -serial stdio
@@ -36,7 +36,7 @@ qemu-system-i386 -kernel kernel.elf -serial stdio
 
 # Run with GRUB
 
-The other way is to use a bootloader (like GRUB) which can load this kernel from disk.
+The other way is to use a multiboot-compliant bootloader (like GRUB) which can load this kernel from disk.
 
 1) Create a virtual disk. For example:
 
