@@ -106,7 +106,10 @@ _tss:
 .code32
 .global _start
 _start:
+        /* setting GDT */
         lgdt _gdt_ptr
+
+        /* setting all selectors */
         jmp KERNEL_CS:_new_cs
 _new_cs:
         mov ax, KERNEL_DS
@@ -115,18 +118,28 @@ _new_cs:
         mov es, ax
         mov fs, ax
         mov gs, ax
+
+        /* setting TSS ptr in TSS descriptor in GDT */
         lea ebp, _tss_desc
         lea eax, _tss
         mov [ebp + 2], ax
         shr eax, 16
         mov [ebp + 4], al
         mov [ebp + 7], ah
+
+        /* setting Task Register with TSS selector */
         mov ax, TSS_S
         ltr ax
+
+        /* setting initial kernel stack */
         lea esp, _stack_top
         mov ebp, esp
         and esp, 0xFFFFFFF0
+
+        /* setting IDT */
         lidt _idt_ptr
+
+        /* go to Rust code */
         call kernel_main
 .size _start, . - _start
 
