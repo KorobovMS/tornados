@@ -102,12 +102,18 @@ _tss:
 .hword 0
 .fill 23, 4, 0
 
+.global _multiboot_info
+_multiboot_info:
+.long 0
+
 .section .text
 .code32
 .global _start
 _start:
         cli
         cld
+
+        mov _multiboot_info, ebx
 
         /* setting GDT */
         lgdt _gdt_ptr
