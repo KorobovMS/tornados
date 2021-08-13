@@ -106,6 +106,9 @@ _tss:
 .code32
 .global _start
 _start:
+        cli
+        cld
+
         /* setting GDT */
         lgdt _gdt_ptr
 
