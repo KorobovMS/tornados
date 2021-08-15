@@ -84,26 +84,26 @@ fn mem_type_to_str(mem_type: u32) -> &'static str {
 
 impl Debug for MultibootInformation {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        f.write_str("MB:\n");
+        f.write_str("MB:\n")?;
         f.write_fmt(format_args!(
-                "flags 0x{:08X}\n", self.flags));
+                "flags 0x{:08X}\n", self.flags))?;
 
         if self.flags & (1 << 0) != 0 {
             f.write_fmt(format_args!(
                     "range 0x{:08X} - 0x{:08X}\n",
-                    self.mem_lower, self.mem_upper));
+                    self.mem_lower, self.mem_upper))?;
         }
 
         if self.flags & (1 << 1) != 0 {
             f.write_fmt(format_args!(
-                    "boot device 0x{:02X}\n", self.boot_device));
+                    "boot device 0x{:02X}\n", self.boot_device))?;
         }
 
         if self.flags & (1 << 2) != 0 {
             let cmdline = self.cmdline as *const u8;
             let cmdline = unsafe { slice_from_cstr(cmdline) };
-            f.write_str(core::str::from_utf8(cmdline).unwrap());
-            f.write_str("\n");
+            f.write_str(core::str::from_utf8(cmdline).unwrap())?;
+            f.write_str("\n")?;
         }
 
         if self.flags & (1 << 3) != 0 {
@@ -116,12 +116,12 @@ impl Debug for MultibootInformation {
                 f.write_fmt(format_args!(
                         "mod 0x{:08X} - 0x{:08X} {}\n",
                         module.mod_start, module.mod_end,
-                        core::str::from_utf8(cmdline).unwrap()));
+                        core::str::from_utf8(cmdline).unwrap()))?;
             }
         }
 
         if self.flags & (1 << 4) != 0 || self.flags & (1 << 5) != 0 {
-            self.syms;
+            // self.syms;
         }
 
         if self.flags & (1 << 6) != 0 {
@@ -132,7 +132,7 @@ impl Debug for MultibootInformation {
                     f.write_fmt(format_args!(
                             "mem 0x{:016X} - 0x{:016X} {}\n",
                             (*ptr).base_addr, (*ptr).base_addr + (*ptr).length,
-                            mem_type_to_str((*ptr).mem_type)));
+                            mem_type_to_str((*ptr).mem_type)))?;
                     let size = (*ptr).size + 4;
                     ptr = (ptr as *const u8).add(size as usize) as *const MultibootMemory;
                     sum_size += size;
@@ -141,20 +141,20 @@ impl Debug for MultibootInformation {
         }
 
         if self.flags & (1 << 7) != 0 {
-            self.drives_length;
-            self.drives_addr;
+            // self.drives_length;
+            // self.drives_addr;
         }
 
         if self.flags & (1 << 8) != 0 {
-            self.config_table;
+            // self.config_table;
         }
 
         if self.flags & (1 << 9) != 0 {
-            self.boot_loader_name;
+            // self.boot_loader_name;
         }
 
         if self.flags & (1 << 10) != 0 {
-            self.apm_table;
+            // self.apm_table;
         }
 
         if self.flags & (1 << 11) != 0 {
