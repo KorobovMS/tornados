@@ -232,7 +232,7 @@ fn thread5_proc()
 }
 
 #[no_mangle]
-pub fn kernel_main() {
+pub fn kernel_main() -> ! {
     gdt::setup_gdt();
     idt::setup_idt();
     pic::remap(0x20, 0x28);
