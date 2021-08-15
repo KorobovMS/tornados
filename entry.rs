@@ -56,9 +56,33 @@ struct MultibootModule {
 #[repr(C)]
 struct MultibootMemory {
     size: u32,
-    base_addr: u64,
-    length: u64,
+    base_addr_low: u32,
+    base_addr_high: u32,
+    length_low: u32,
+    length_high: u32,
     mem_type: u32,
+}
+const SA_MULTIBOOT_MEMORY_SIZE: usize =
+    (mem::size_of::<MultibootMemory>() == 24) as usize - 1;
+
+impl MultibootMemory {
+    fn base_addr(&self) -> u64 {
+        let mut ret = self.base_addr_high as u64;
+        ret <<= 32;
+        ret |= self.base_addr_low as u64;
+        ret
+    }
+
+    fn length(&self) -> u64 {
+        let mut ret = self.length_high as u64;
+        ret <<= 32;
+        ret |= self.length_low as u64;
+        ret
+    }
+
+    fn end_addr(&self) -> u64 {
+        self.base_addr() + self.length()
+    }
 }
 
 unsafe fn slice_from_cstr(s: *const u8) -> &'static [u8] {
@@ -131,7 +155,7 @@ impl Debug for MultibootInformation {
                 while sum_size < self.mmap_length {
                     f.write_fmt(format_args!(
                             "mem 0x{:016X} - 0x{:016X} {}\n",
-                            (*ptr).base_addr, (*ptr).base_addr + (*ptr).length,
+                            (*ptr).base_addr(), (*ptr).end_addr(),
                             mem_type_to_str((*ptr).mem_type)))?;
                     let size = (*ptr).size + 4;
                     ptr = (ptr as *const u8).add(size as usize) as *const MultibootMemory;
