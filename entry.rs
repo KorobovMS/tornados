@@ -200,57 +200,24 @@ fn busy_wait() {
     }
 }
 
-fn thread1_proc()
+fn kernel_thread_proc()
 {
     loop {
         serial::write_str("1");
-        sched::stop_thread(0);
         busy_wait();
     }
 }
 
-fn thread2_proc()
-{
-    loop {
-        serial::write_str("2");
-        sched::stop_thread(1);
-        busy_wait();
-    }
+extern "C" {
+    fn kcall() -> u32;
 }
 
-
-fn thread3_proc()
-{
-    loop {
-        serial::write_str("3");
-        sched::stop_thread(2);
-        busy_wait();
-    }
-}
-
-fn thread4_proc()
-{
-    let mut x: u8 = 0;
-    loop {
-        x = (x + 1) % 3;
-        if x == 0 {
-            sched::resume_thread(4);
-        } else {
-            sched::suspend_thread(4);
-        }
-
-        serial::write_str("4");
-        sched::stop_thread(3);
-        busy_wait();
-    }
-}
-
-fn thread5_proc()
+fn user_thread_proc()
 {
     let mut vga = Vga::new();
     loop {
-        vga.write("123");
-        sched::stop_thread(4);
+        let x = unsafe { kcall() };
+        write!(&mut vga, "{}", x).unwrap();
         busy_wait();
     }
 }
@@ -267,10 +234,7 @@ pub fn kernel_main() -> ! {
     vga.clear_screen();
     write!(&mut vga, "{:?}", unsafe { _multiboot_info }).unwrap();
     sched::init_scheduler();
-    sched::create_kernel_thread(thread1_proc as *const ());
-    sched::create_kernel_thread(thread2_proc as *const ());
-    sched::create_kernel_thread(thread3_proc as *const ());
-    sched::create_kernel_thread(thread4_proc as *const ());
-    sched::create_user_thread(thread5_proc as *const ());
+    sched::create_kernel_thread(kernel_thread_proc as *const ());
+    sched::create_user_thread(user_thread_proc as *const ());
     sched::start_scheduler();
 }

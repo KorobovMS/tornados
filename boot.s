@@ -6,6 +6,10 @@
 .set MAGIC, 0x1BADB002
 .set CHECKSUM, -(MAGIC + FLAGS)
 
+.set IA32_SYSENTER_CS, 0x174
+.set IA32_SYSENTER_EIP, 0x176
+.set IA32_SYSENTER_ESP, 0x175
+
 .section .multiboot
 .align 4
 .long MAGIC
@@ -106,8 +110,29 @@ _tss:
 _multiboot_info:
 .long 0
 
+_counter:
+.long 0
+
 .section .text
 .code32
+
+_sysenter_handler:
+        mov eax, [_counter]
+        inc eax
+        mov [_counter], eax
+        /* ecx > esp */
+        /* edx -> eip */
+        sti
+        sysexit
+
+.global kcall
+kcall:
+        mov ecx, esp
+        lea edx, 1f
+        sysenter
+        1:
+        ret
+
 .global _start
 _start:
         cli
@@ -147,6 +172,18 @@ _new_cs:
 
         /* setting IDT */
         lidt _idt_ptr
+
+        /* setting sysenter */
+        mov edx, 0
+        mov ecx, IA32_SYSENTER_CS
+        mov eax, KERNEL_CS
+        wrmsr
+        mov ecx, IA32_SYSENTER_EIP
+        lea eax, _sysenter_handler
+        wrmsr
+        mov ecx, IA32_SYSENTER_ESP
+        lea eax, _stack_top
+        wrmsr
 
         /* go to Rust code */
         call kernel_main
