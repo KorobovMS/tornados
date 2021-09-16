@@ -1,6 +1,5 @@
 use core::fmt::{Write, Debug, Formatter, Result};
 use core::mem;
-use gdt;
 use idt;
 use pic;
 use serial;
@@ -224,7 +223,6 @@ fn user_thread_proc()
 
 #[no_mangle]
 pub fn kernel_main() -> ! {
-    gdt::setup_gdt();
     idt::setup_idt();
     pic::remap(0x20, 0x28);
     pic::mask(0xEC, 0xFF);

@@ -7,7 +7,6 @@
 #![feature(panic_info_message)]
 
 mod entry;
-mod gdt;
 mod idt;
 mod ioport;
 mod memops;
