@@ -123,6 +123,7 @@ const X86_EXC_ALIGNMENT_CHECK: u32 = 17;
 const X86_EXC_MACHINE_CHECK: u32 = 18;
 const X86_EXC_SIMD_FLOATING_POINT: u32 = 19;
 const X86_EXC_VIRTUALIZATION: u32 = 20;
+const X86_EXC_CONTROL_PROTECTION: u32 = 21;
 
 #[no_mangle]
 extern "C" fn handle_interrupt(int_state: *const u32) {
@@ -191,6 +192,7 @@ pub fn setup_idt() {
     setup_irq_handler(18, isr_18 as *const ());
     setup_irq_handler(19, isr_19 as *const ());
     setup_irq_handler(20, isr_20 as *const ());
+    setup_irq_handler(21, isr_21 as *const ());
     setup_irq_handler(0x20, isr_32 as *const ());
     setup_irq_handler(0x21, isr_33 as *const ());
     setup_irq_handler(0x24, isr_36 as *const ());
