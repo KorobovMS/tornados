@@ -16,7 +16,7 @@ First of all, dependencies have to be built.
 
 ```console
 rustup component add rust-src
-rustc --crate-name core --edition=2018 ~/.rustup/toolchains/<toolchain>/lib/rustlib/src/rust/library/core/src/lib.rs --crate-type rlib --target i686-unknown-none.json
+rustc --crate-name core --edition=2021 ~/.rustup/toolchains/<toolchain>/lib/rustlib/src/rust/library/core/src/lib.rs --crate-type rlib --target i686-unknown-none.json
 git clone https://github.com/rust-lang/compiler-builtins.git
 rustc --crate-name compiler_builtins compiler-builtins/src/lib.rs --crate-type rlib --target i686-unknown-none.json --cfg 'feature="compiler-builtins"' --extern core=libcore.rlib
 ```

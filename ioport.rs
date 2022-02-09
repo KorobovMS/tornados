@@ -1,3 +1,5 @@
+use core::arch::asm;
+
 pub struct Port {
     port: u16,
 }

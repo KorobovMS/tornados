@@ -1,3 +1,4 @@
+use core::arch::asm;
 use core::option::Option;
 use core::marker::Copy;
 use core::clone::Clone;
@@ -44,9 +45,9 @@ impl Display for Thread {
 extern "C" fn idle_proc() -> ! {
     unsafe {
         asm!(
-            "repeat:",
+            "2:",
             "hlt",
-            "jmp repeat",
+            "jmp 2b",
             options(noreturn));
     }
 }

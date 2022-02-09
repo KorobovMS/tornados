@@ -2,6 +2,7 @@ use sched;
 use serial;
 use pic;
 use vga::Vga;
+use core::arch::asm;
 use core::fmt::Write;
 
 static mut VGA: Vga = Vga::new();
@@ -141,7 +142,7 @@ extern "C" fn handle_interrupt(int_state: *const u32) {
         },
         0x24 => {
             let b = serial::get_byte();
-            unsafe { write!(&mut VGA, "{}", b as char).unwrap(); }
+            unsafe { write!(VGA, "{}", b as char).unwrap(); }
             serial::write_str("4");
             pic::end_of_interrupt(4);
         },

@@ -216,7 +216,7 @@ fn user_thread_proc()
     let mut vga = Vga::new();
     loop {
         let x = unsafe { kcall() };
-        write!(&mut vga, "{}", x).unwrap();
+        write!(vga, "{}", x).unwrap();
         busy_wait();
     }
 }
@@ -230,7 +230,7 @@ pub fn kernel_main() -> ! {
     serial::write_str("Booting kernel...\n");
     let mut vga = Vga::new();
     vga.clear_screen();
-    write!(&mut vga, "{:?}", unsafe { _multiboot_info }).unwrap();
+    write!(vga, "{:?}", unsafe { _multiboot_info }).unwrap();
     sched::init_scheduler();
     sched::create_kernel_thread(kernel_thread_proc as *const ());
     sched::create_user_thread(user_thread_proc as *const ());
