@@ -1,4 +1,4 @@
-use ioport::Port;
+use crate::ioport::Port;
 
 const SERIAL_BASE: u16 = 0x3f8;
 

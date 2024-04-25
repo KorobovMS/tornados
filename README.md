@@ -6,22 +6,15 @@ This project is an attempt to write a kernel with a small environment using main
 
 * Nightly Rust build
     * `rustup toolchain install x86_64-unknown-linux-gnu`
+    * `rustup component add rust-src`
+    * `git clone https://github.com/rust-lang/compiler-builtins.git`
 * make
 * binutils
 * qemu
 
 # Build
 
-First of all, dependencies have to be built.
-
-```console
-rustup component add rust-src
-rustc --crate-name core --edition=2021 ~/.rustup/toolchains/<toolchain>/lib/rustlib/src/rust/library/core/src/lib.rs --crate-type rlib --target i686-unknown-none.json
-git clone https://github.com/rust-lang/compiler-builtins.git
-rustc --crate-name compiler_builtins compiler-builtins/src/lib.rs --crate-type rlib --target i686-unknown-none.json --cfg 'feature="compiler-builtins"' --extern core=libcore.rlib
-```
-
-After this two options are available:
+Two options are available:
 
 1) Debug build: `make`
 2) Release build: `DEBUGBUILD=0 make`

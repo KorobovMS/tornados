@@ -1,4 +1,4 @@
-use ioport::Port;
+use crate::ioport::Port;
 
 static PIC1_CMD: Port = Port::new(0x20);
 static PIC1_DATA: Port = Port::new(0x21);

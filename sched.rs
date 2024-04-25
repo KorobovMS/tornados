@@ -1,8 +1,8 @@
 use core::arch::asm;
-use core::option::Option;
 use core::marker::Copy;
 use core::clone::Clone;
 use core::fmt::{Display, Formatter, Result};
+use core::ptr::addr_of;
 
 #[derive(Copy, Clone)]
 enum ThreadState {
@@ -188,7 +188,7 @@ pub fn current() -> &'static Thread {
     unsafe { THREADS[CURRENT_THREAD_IDX].as_ref().unwrap() }
 }
 
-unsafe fn next_idx(current_idx: usize) -> (usize, &'static Thread) {
+unsafe fn next_idx(current_idx: usize) -> (usize, *const Thread) {
     let mut idx = current_idx;
     loop {
         idx = (idx + 1) % MAX_THREADS;
@@ -198,7 +198,7 @@ unsafe fn next_idx(current_idx: usize) -> (usize, &'static Thread) {
             }
         }
         if idx == current_idx {
-            return (MAX_THREADS, &IDLE_THREAD);
+            return (MAX_THREADS, addr_of!(IDLE_THREAD));
         }
     }
 }
@@ -238,11 +238,11 @@ extern "C" {
                       eip: u32, eflags: u32, cs: u32, ss: u32) -> !;
 }
 
-fn switch_to_thread(t: &Thread) -> ! {
+fn switch_to_thread(t: *const Thread) -> ! {
     unsafe {
-        restore_thread(t.eax, t.ebx, t.ecx, t.edx,
-                       t.esi, t.edi, t.ebp, t.esp,
-                       t.eip, t.eflags, t.cs, t.ss);
+        restore_thread((*t).eax, (*t).ebx, (*t).ecx, (*t).edx,
+                       (*t).esi, (*t).edi, (*t).ebp, (*t).esp,
+                       (*t).eip, (*t).eflags, (*t).cs, (*t).ss);
     }
 }
 
@@ -260,7 +260,7 @@ pub fn start_scheduler() -> ! {
         if let Some(ref thread) = THREADS[0] {
             switch_to_thread(thread);
         } else {
-            switch_to_thread(&IDLE_THREAD);
+            switch_to_thread(addr_of!(IDLE_THREAD));
         }
     }
 }
@@ -268,7 +268,7 @@ pub fn start_scheduler() -> ! {
 pub fn init_scheduler() {
     unsafe {
         IDLE_THREAD.eip = idle_proc as usize as u32;
-        let stack = &IDLE_STACK as *const u8;
+        let stack = addr_of!(IDLE_STACK) as *const u8;
         IDLE_THREAD.esp = stack.add(IDLE_STACK_SIZE) as u32;
     }
 }

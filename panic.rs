@@ -1,9 +1,8 @@
-use idt::{hang, disable_interrupts};
-use vga::Vga;
+use crate::idt::{hang, disable_interrupts};
+use crate::vga::Vga;
 
 #[panic_handler]
-#[no_mangle]
-pub extern "C" fn rust_begin_unwind(info: &core::panic::PanicInfo) -> ! {
+fn panic(info: &core::panic::PanicInfo) -> ! {
     let mut vga = Vga::new();
     vga.clear_screen();
     if let Some(arg) = info.message() {
@@ -17,6 +16,3 @@ pub extern "C" fn rust_begin_unwind(info: &core::panic::PanicInfo) -> ! {
     disable_interrupts();
     hang();
 }
-
-#[lang = "eh_personality"]
-fn eh_personality() {}

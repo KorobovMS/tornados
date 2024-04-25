@@ -1,9 +1,10 @@
-use sched;
-use serial;
-use pic;
-use vga::Vga;
+use crate::sched;
+use crate::serial;
+use crate::pic;
+use crate::vga::Vga;
 use core::arch::asm;
 use core::fmt::Write;
+use core::ptr::addr_of_mut;
 
 static mut VGA: Vga = Vga::new();
 
@@ -166,7 +167,7 @@ pub fn setup_irq_handler(idx: u8, handler: *const ()) {
     let fl = 0x8E00u64 << 32;
     let idt_desc: u64 = lo | cs | fl | hi;
     unsafe {
-        let idt = &mut _idt as *mut u64;
+        let idt = addr_of_mut!(_idt) as *mut u64;
         *idt.offset(idx as isize) = idt_desc;
     }
 }

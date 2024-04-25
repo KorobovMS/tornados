@@ -1,10 +1,10 @@
 use core::fmt::{Write, Debug, Formatter, Result};
 use core::mem;
-use idt;
-use pic;
-use serial;
-use vga::Vga;
-use sched;
+use crate::idt;
+use crate::pic;
+use crate::serial;
+use crate::vga::Vga;
+use crate::sched;
 
 extern "C" {
     static _multiboot_info: &'static MultibootInformation;
